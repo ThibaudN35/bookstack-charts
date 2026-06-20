@@ -33,6 +33,28 @@ kubectl -n bookstack port-forward service/bookstack 6875:80
 
 L'application est alors accessible sur `http://localhost:6875`.
 
+## Déploiement avec Argo CD
+
+Le manifeste [argocd/bookstack-app.yaml](argocd/bookstack-app.yaml) déclare une application Argo CD qui suit la branche `main` de ce dépôt et déploie le chart dans le namespace `bookstack`.
+
+Pré-requis : Argo CD doit être installé dans le cluster et le dépôt GitHub doit être accessible par Argo CD. Pense aussi à pousser tes modifications sur `main` avant de synchroniser l'application.
+
+Crée l'application :
+
+```bash
+kubectl apply -f argocd/bookstack-app.yaml
+```
+
+La configuration active la synchronisation automatique, le nettoyage des ressources retirées du dépôt (`prune`) et la correction des écarts manuels (`selfHeal`). Le namespace `bookstack` est créé automatiquement grâce à `CreateNamespace=true`.
+
+Pour suivre son état :
+
+```bash
+kubectl -n argocd get application bookstack-chart
+```
+
+Après modification des fichiers du chart, committe et pousse les changements ; Argo CD détectera la nouvelle révision et appliquera la synchronisation automatiquement.
+
 ## Configuration
 
 Les ressources sont des listes dans `bookstack-chart/values.yaml`. On peut donc ajouter plusieurs éléments du même type :

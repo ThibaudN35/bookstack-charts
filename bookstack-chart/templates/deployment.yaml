@@ -29,41 +29,41 @@ spec:
           imagePullPolicy: {{ .Values.deployment.image.pullPolicy }}
 
           ports:
-{{- range .Values.deployment.ports }}
+          {{- range .Values.deployment.ports }}
             - name: {{ .name }}
               containerPort: {{ .containerPort }}
-{{- end }}
+          {{- end }}
 
-{{- if or .Values.deployment.configMap.enabled .Values.deployment.secret.enabled }}
+        {{- if or .Values.deployment.configMap.enabled .Values.deployment.secret.enabled }}
           envFrom:
-{{- end }}
+        {{- end }}
 
-{{- if .Values.deployment.configMap.enabled }}
+          {{- if .Values.deployment.configMap.enabled }}
             - configMapRef:
                 name: {{ .Values.application.name }}-config
-{{- end }}
+          {{- end }}
 
-{{- if .Values.deployment.secret.enabled }}
+          {{- if .Values.deployment.secret.enabled }}
             - secretRef:
                 name: {{ .Values.application.name }}-secret
-{{- end }}
+          {{- end }}
 
           env:
-{{- range $key, $value := .Values.deployment.env }}
+        {{- range $key, $value := .Values.deployment.env }}
             - name: {{ $key }}
               value: {{ $value | quote }}
-{{- end }}
+        {{- end }}
 
-{{- if .Values.deployment.pvc.enabled }}
+        {{- if .Values.deployment.pvc.enabled }}
           volumeMounts:
             - name: data
               mountPath: {{ .Values.deployment.pvc.mountPath }}
-{{- end }}
+        {{- end }}
 
-{{- if .Values.deployment.pvc.enabled }}
+    {{- if .Values.deployment.pvc.enabled }}
       volumes:
         - name: data
           persistentVolumeClaim:
             claimName: {{ .Values.deployment.pvc.claimName }}
-{{- end }}
+    {{- end }}
 {{- end }}

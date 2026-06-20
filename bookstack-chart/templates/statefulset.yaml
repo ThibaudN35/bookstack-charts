@@ -25,7 +25,7 @@ spec:
     spec:
       containers:
         -name: {{ .Values.statefulset.name }}
-         image: "{{ .Values.statefulset.image.repository }}:{{ .Values.statefulset.image.tag }}"
+         image: {{ .Values.statefulset.image.repository }}:{{ .Values.statefulset.image.tag }}
          imagePullPolicy: {{ .Values.statefulset.image.pullPolicy }}
          
          ports:
@@ -33,22 +33,22 @@ spec:
            containerPort: {{ .Values.statefulset.containerPort }}
          
          env:
-{{- range $key, $value := .Values.statefulset.env }}
+         {{- range $key, $value := .Values.statefulset.env }}
            - name: {{ $key }}
              value: {{ $value | quote }}
-{{- end }}
+         {{- end }}
          
-{{- if .Values.pvc.enabled }}
+       {{- if .Values.pvc.enabled }}
          volumeMounts:
            - name: {{ .Values.statefulset.name }}-pvc
              mountPath: {{ .Values.pvc.mountPath }}
-{{- end }}
+       {{- end }}
 
-{{- if .Values.statefulset.pvc.enabled }}
+    {{- if .Values.statefulset.pvc.enabled }}
       volumes:
         - name: {{ .Values.statefulset.name }}-pvc
           persistentVolumeClaim:
             claimName: {{ .Values.statefulset.pvc.claimName }}
-{{- end }}
+    {{- end }}
         
 {{- end }}

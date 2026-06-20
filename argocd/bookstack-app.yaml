@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: bookstack-chart
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/ThibaudN35/bookstack-charts.git
+    targetRevision: main
+    path: bookstack-chart
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: bookstack
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true  # Crée le namespace si absent

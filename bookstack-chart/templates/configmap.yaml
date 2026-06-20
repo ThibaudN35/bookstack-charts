@@ -1,13 +1,16 @@
-{{- if .Values.configmap.enabled }}
+{{- range .Values.configmaps }}
+{{- if .enabled }}
+---
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ .Values.application.name }}-configmap
+  name: {{ .name }}
   labels:
-    app.kubernetes.io/name: {{ .Values.application.name }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/name: {{ .name }}
+    app.kubernetes.io/instance: {{ $.Release.Name }}
 data:
-{{- range $key, $value := .Values.configmap.data }}
+  {{- range $key, $value := .data }}
   {{ $key }}: {{ $value | quote }}
+  {{- end }}
 {{- end }}
 {{- end }}

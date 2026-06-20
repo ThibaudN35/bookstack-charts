@@ -1,18 +1,27 @@
-{{- if .Values.service.enabled }}
+{{- range .Values.services }}
+{{- if .enabled }}
+---
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ .Values.application.name }}
+  name: {{ .name }}
   labels:
-    app.kubernetes.io/name: {{ .Values.application.name }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/name: {{ .name }}
+    app.kubernetes.io/instance: {{ $.Release.Name }}
 spec:
-  type: {{ .Values.service.type }}
+  type: {{ .type | default "ClusterIP" }}
+  {{- with .clusterIP }}
+  clusterIP: {{ . }}
+  {{- end }}
   selector:
-    app.kubernetes.io/name: {{ .Values.application.name }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/name: {{ .selectorName | default .name }}
+    app.kubernetes.io/instance: {{ $.Release.Name }}
   ports:
-    - protocol: TCP
-      port: {{ .Values.service.port }}
-      targetPort: {{ .Values.service.targetPort }}
+    {{- range .ports }}
+    - name: {{ .name }}
+      protocol: {{ .protocol | default "TCP" }}
+      port: {{ .port }}
+      targetPort: {{ .targetPort }}
+    {{- end }}
+{{- end }}
 {{- end }}

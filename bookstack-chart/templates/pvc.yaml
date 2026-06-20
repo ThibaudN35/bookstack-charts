@@ -1,15 +1,21 @@
-{{- if .Values.pvc.enabled }}
+{{- range .Values.pvcs }}
+{{- if .enabled }}
+---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: {{ .Values.application.name }}-pvc
+  name: {{ .name }}
   labels:
-    app.kubernetes.io/name: {{ .Values.application.name }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/name: {{ .name }}
+    app.kubernetes.io/instance: {{ $.Release.Name }}
 spec:
   accessModes:
-    - {{ .Values.pvc.accessMode }}
+    - {{ .accessMode }}
+  {{- with .storageClassName }}
+  storageClassName: {{ . }}
+  {{- end }}
   resources:
     requests:
-      storage: {{ .Values.pvc.size }}
+      storage: {{ .size }}
+{{- end }}
 {{- end }}

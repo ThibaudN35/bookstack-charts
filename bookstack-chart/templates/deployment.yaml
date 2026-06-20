@@ -1,69 +1,61 @@
-{{- if .Values.deployment.enabled }}
+{{- range .Values.deployments }}
+{{- if .enabled }}
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .Values.application.name }}
+  name: {{ .name }}
   labels:
-    app.kubernetes.io/name: {{ .Values.application.name }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
-
+    app.kubernetes.io/name: {{ .name }}
+    app.kubernetes.io/instance: {{ $.Release.Name }}
 spec:
-  replicas: {{ .Values.deployment.replicas }}
-
+  replicas: {{ .replicas | default 1 }}
   selector:
     matchLabels:
-      app.kubernetes.io/name: {{ .Values.application.name }}
-      app.kubernetes.io/instance: {{ .Release.Name }}
-
+      app.kubernetes.io/name: {{ .name }}
+      app.kubernetes.io/instance: {{ $.Release.Name }}
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: {{ .Values.application.name }}
-        app.kubernetes.io/instance: {{ .Release.Name }}
-
+        app.kubernetes.io/name: {{ .name }}
+        app.kubernetes.io/instance: {{ $.Release.Name }}
     spec:
       containers:
-        - name: {{ .Values.application.name }}
-
-          image: "{{ .Values.deployment.image.repository }}:{{ .Values.deployment.image.tag }}"
-          imagePullPolicy: {{ .Values.deployment.image.pullPolicy }}
-
+        - name: {{ .name }}
+          image: "{{ .image.repository }}:{{ .image.tag }}"
+          imagePullPolicy: {{ .image.pullPolicy | default "IfNotPresent" }}
+          {{- with .ports }}
           ports:
-          {{- range .Values.deployment.ports }}
+            {{- range . }}
             - name: {{ .name }}
               containerPort: {{ .containerPort }}
+            {{- end }}
           {{- end }}
-
-        {{- if or .Values.deployment.configMap.enabled .Values.deployment.secret.enabled }}
+          {{- if or .configMapRefs .secretRefs }}
           envFrom:
-        {{- end }}
-
-          {{- if .Values.deployment.configMap.enabled }}
+            {{- range .configMapRefs }}
             - configMapRef:
-                name: {{ .Values.application.name }}-config
-          {{- end }}
-
-          {{- if .Values.deployment.secret.enabled }}
+                name: {{ . }}
+            {{- end }}
+            {{- range .secretRefs }}
             - secretRef:
-                name: {{ .Values.application.name }}-secret
+                name: {{ . }}
+            {{- end }}
           {{- end }}
-
+          {{- with .env }}
           env:
-        {{- range $key, $value := .Values.deployment.env }}
+            {{- range $key, $value := . }}
             - name: {{ $key }}
               value: {{ $value | quote }}
-        {{- end }}
-
-        {{- if .Values.deployment.pvc.enabled }}
+            {{- end }}
+          {{- end }}
+          {{- with .volumeMounts }}
           volumeMounts:
-            - name: data
-              mountPath: {{ .Values.deployment.pvc.mountPath }}
-        {{- end }}
-
-    {{- if .Values.deployment.pvc.enabled }}
+{{ toYaml . | nindent 12 }}
+          {{- end }}
+      {{- with .volumes }}
       volumes:
-        - name: data
-          persistentVolumeClaim:
-            claimName: {{ .Values.deployment.pvc.claimName }}
-    {{- end }}
+{{ toYaml . | nindent 8 }}
+      {{- end }}
+{{- end }}
 {{- end }}

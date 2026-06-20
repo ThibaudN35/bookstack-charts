@@ -1,0 +1,90 @@
+deployments:
+  - name: bookstack
+    enabled: true
+    replicas: 1
+    image:
+      repository: lscr.io/linuxserver/bookstack
+      tag: latest
+      pullPolicy: IfNotPresent
+    ports:
+      - name: http
+        containerPort: 80
+    env:
+      PUID: "1000"
+      PGID: "1000"
+      TZ: Etc/UTC
+      # Générer une clé si nécessaire : openssl rand -base64 32
+      APP_KEY: "base64:zfwiXZC1bQsNlwJuvX89yotaSd+RaslESzHWJTO95Ow="
+      # À remplacer par l'URL publique (Ingress ou LoadBalancer) de BookStack.
+      APP_URL: http://localhost:6875
+      DB_HOST: mariadb
+      DB_PORT: "3306"
+      DB_USERNAME: bookstack
+      DB_PASSWORD: bookstack
+      DB_DATABASE: bookstack
+    configMapRefs: []
+    secretRefs: []
+    volumeMounts:
+      - name: bookstack-data
+        mountPath: /config
+    volumes:
+      - name: bookstack-data
+        persistentVolumeClaim:
+          claimName: bookstack-data
+
+statefulsets:
+  - name: mariadb
+    enabled: true
+    serviceName: mariadb
+    replicas: 1
+    image:
+      repository: mariadb
+      tag: "11"
+      pullPolicy: IfNotPresent
+    ports:
+      - name: mysql
+        containerPort: 3306
+    env:
+      MARIADB_DATABASE: bookstack
+      MARIADB_USER: bookstack
+      MARIADB_PASSWORD: bookstack
+      MARIADB_ROOT_PASSWORD: rootpassword
+    volumeMounts:
+      - name: mariadb-data
+        mountPath: /var/lib/mysql
+    volumes:
+      - name: mariadb-data
+        persistentVolumeClaim:
+          claimName: mariadb-data
+
+services:
+  - name: bookstack
+    enabled: true
+    type: ClusterIP
+    selectorName: bookstack
+    ports:
+      - name: http
+        port: 80
+        targetPort: 80
+  - name: mariadb
+    enabled: true
+    type: ClusterIP
+    clusterIP: None
+    selectorName: mariadb
+    ports:
+      - name: mysql
+        port: 3306
+        targetPort: 3306
+
+pvcs:
+  - name: bookstack-data
+    enabled: true
+    accessMode: ReadWriteOnce
+    size: 1Gi
+  - name: mariadb-data
+    enabled: true
+    accessMode: ReadWriteOnce
+    size: 2Gi
+
+configmaps: []
+secrets: []
